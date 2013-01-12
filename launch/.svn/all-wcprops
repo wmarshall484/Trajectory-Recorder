@@ -1,0 +1,53 @@
+K 25
+svn:wc:ra_dav:version-url
+V 71
+/svn/penn-ros-pkgs/!svn/ver/1065/pr2_poop_scoop/trunk/poop_scoop/launch
+END
+placer.launch
+K 25
+svn:wc:ra_dav:version-url
+V 85
+/svn/penn-ros-pkgs/!svn/ver/1031/pr2_poop_scoop/trunk/poop_scoop/launch/placer.launch
+END
+pr2_gripper_sensor_controller.launch
+K 25
+svn:wc:ra_dav:version-url
+V 107
+/svn/penn-ros-pkgs/!svn/ver/633/pr2_poop_scoop/trunk/poop_scoop/launch/pr2_gripper_sensor_controller.launch
+END
+haptic_senses.launch
+K 25
+svn:wc:ra_dav:version-url
+V 91
+/svn/penn-ros-pkgs/!svn/ver/633/pr2_poop_scoop/trunk/poop_scoop/launch/haptic_senses.launch
+END
+scooper.launch
+K 25
+svn:wc:ra_dav:version-url
+V 85
+/svn/penn-ros-pkgs/!svn/ver/626/pr2_poop_scoop/trunk/poop_scoop/launch/scooper.launch
+END
+master.launch
+K 25
+svn:wc:ra_dav:version-url
+V 85
+/svn/penn-ros-pkgs/!svn/ver/1065/pr2_poop_scoop/trunk/poop_scoop/launch/master.launch
+END
+pr2_gripper_sensor_controller.yaml
+K 25
+svn:wc:ra_dav:version-url
+V 105
+/svn/penn-ros-pkgs/!svn/ver/633/pr2_poop_scoop/trunk/poop_scoop/launch/pr2_gripper_sensor_controller.yaml
+END
+move_base.launch
+K 25
+svn:wc:ra_dav:version-url
+V 88
+/svn/penn-ros-pkgs/!svn/ver/1031/pr2_poop_scoop/trunk/poop_scoop/launch/move_base.launch
+END
+record_arm_motion.launch
+K 25
+svn:wc:ra_dav:version-url
+V 95
+/svn/penn-ros-pkgs/!svn/ver/620/pr2_poop_scoop/trunk/poop_scoop/launch/record_arm_motion.launch
+END

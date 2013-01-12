@@ -1,0 +1,17 @@
+K 25
+svn:wc:ra_dav:version-url
+V 113
+/svn/penn-ros-pkgs/!svn/ver/880/sbpl_arm_planning/branches/sbpl_two_arm_planning/sbpl_two_arm_planner_node/config
+END
+simple_filters.yaml
+K 25
+svn:wc:ra_dav:version-url
+V 133
+/svn/penn-ros-pkgs/!svn/ver/880/sbpl_arm_planning/branches/sbpl_two_arm_planning/sbpl_two_arm_planner_node/config/simple_filters.yaml
+END
+pr2_both_arms_controller.yaml
+K 25
+svn:wc:ra_dav:version-url
+V 143
+/svn/penn-ros-pkgs/!svn/ver/827/sbpl_arm_planning/branches/sbpl_two_arm_planning/sbpl_two_arm_planner_node/config/pr2_both_arms_controller.yaml
+END

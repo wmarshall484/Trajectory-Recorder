@@ -1,0 +1,53 @@
+K 25
+svn:wc:ra_dav:version-url
+V 83
+/svn/penn-ros-pkgs/!svn/ver/1068/pr2_poop_scoop/trunk/poop_scoop/include/poop_scoop
+END
+arm_motion_recorder.h
+K 25
+svn:wc:ra_dav:version-url
+V 104
+/svn/penn-ros-pkgs/!svn/ver/583/pr2_poop_scoop/trunk/poop_scoop/include/poop_scoop/arm_motion_recorder.h
+END
+scoop_placer.h
+K 25
+svn:wc:ra_dav:version-url
+V 97
+/svn/penn-ros-pkgs/!svn/ver/624/pr2_poop_scoop/trunk/poop_scoop/include/poop_scoop/scoop_placer.h
+END
+scooper.h
+K 25
+svn:wc:ra_dav:version-url
+V 93
+/svn/penn-ros-pkgs/!svn/ver/1068/pr2_poop_scoop/trunk/poop_scoop/include/poop_scoop/scooper.h
+END
+visualize_arm.h
+K 25
+svn:wc:ra_dav:version-url
+V 98
+/svn/penn-ros-pkgs/!svn/ver/614/pr2_poop_scoop/trunk/poop_scoop/include/poop_scoop/visualize_arm.h
+END
+arm.h
+K 25
+svn:wc:ra_dav:version-url
+V 89
+/svn/penn-ros-pkgs/!svn/ver/1063/pr2_poop_scoop/trunk/poop_scoop/include/poop_scoop/arm.h
+END
+head.h
+K 25
+svn:wc:ra_dav:version-url
+V 90
+/svn/penn-ros-pkgs/!svn/ver/1033/pr2_poop_scoop/trunk/poop_scoop/include/poop_scoop/head.h
+END
+torso.h
+K 25
+svn:wc:ra_dav:version-url
+V 90
+/svn/penn-ros-pkgs/!svn/ver/669/pr2_poop_scoop/trunk/poop_scoop/include/poop_scoop/torso.h
+END
+gripper.h
+K 25
+svn:wc:ra_dav:version-url
+V 92
+/svn/penn-ros-pkgs/!svn/ver/677/pr2_poop_scoop/trunk/poop_scoop/include/poop_scoop/gripper.h
+END

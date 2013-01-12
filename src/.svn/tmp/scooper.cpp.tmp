@@ -1,0 +1,319 @@
+#include <poop_scoop/scooper.h>
+
+Scooper::Scooper() : ph_("~")
+{
+	ROS_INFO("Scooper is initializing.");
+
+	scooping_service_ = nh_.advertiseService("/scoop_poop", &Scooper::scoopService,this);
+
+  larm_ = new Arm(std::string("left"));
+  rarm_ = new Arm(std::string("right"));
+  aviz_ = new VisualizeArm(std::string("right_arm"));
+  rgripper_ = new Gripper(std::string("right"));
+  lgripper_ = new Gripper(std::string("left"));
+  ph_.param<std::string>("arm_positions_filename", poses_filename_, " ");
+  ph_.param<bool>("use_gripper_sensors", use_gripper_sensors_flag_, false);
+  //ph_.param("close_scooper_position", close_scooper_position_, 0.86);
+  //ph_.param("close_scooper_effort", close_scooper_effort_, 100.0);
+  //ph_.param("open_scooper_position", open_scooper_position_, 0.0);
+  //ph_.param("open_scooper_effort", open_scooper_effort_, 100.0);
+
+  if (use_gripper_sensors_flag_)
+  {
+  	ROS_INFO("Using the Pressure Sensors to control the Gripper!");
+    SensorGripperService_OpenScoop_   = nh_.serviceClient<std_srvs::Empty>("open_scoop");
+    SensorGripperService_CloseScoop_  = nh_.serviceClient<std_srvs::Empty>("close_scoop");
+    SensorGripperService_OpenGripper_ = nh_.serviceClient<std_srvs::Empty>("open_gripper");
+    SensorGripperService_GrabScoop_   = nh_.serviceClient<std_srvs::Empty>("grab_scoop");
+
+    if(!SensorGripperService_OpenScoop_.waitForExistence(ros::Duration(5.0)))
+    	ROS_ERROR("Sensor Gripper Open Scoop Service does not exist!");
+    if(!SensorGripperService_CloseScoop_.waitForExistence(ros::Duration(5.0)))
+      ROS_ERROR("Sensor Gripper Close Scoop Service does not exist!");
+		if(!SensorGripperService_OpenGripper_.waitForExistence(ros::Duration(5.0)))
+				ROS_ERROR("Sensor Gripper Open Gripper Service does not exist!");
+		if(!SensorGripperService_GrabScoop_.waitForExistence(ros::Duration(5.0)))
+				ROS_ERROR("Sensor Gripper Grab Scoop Service does not exist!");
+  }
+  else
+  {
+  	ROS_INFO("Using Dumb Gripper Control!");
+  }
+
+  sleep(1);
+
+  if(!parsePositionFile(poses_filename_))
+    ROS_ERROR("Failed to parse positions file");
+  else
+    ROS_INFO("Parsed the arm positions file.");
+  printDebugInfo();
+  ROS_INFO("Raising torso to the proper height.");
+  torso_.up();
+  ROS_INFO("Tucking Arms.");
+  tuckArms();
+  //rarm_->sendArmToConfiguration(start_scooper_, 2.0);
+  //sleep(2);
+  //rarm_->sendArmToConfiguration(floor_scooper_, 2.0);
+  ROS_INFO("Scooper is initialized. Spinning.");
+//  poops_sub_ = nh_.subscribe("poop_perception", 1, &Scooper::poopsCallback,this);
+}
+
+Scooper::~Scooper()
+{
+  delete larm_;
+  delete rarm_;
+  delete lgripper_;
+  delete rgripper_;
+  delete aviz_;
+
+  SensorGripperService_CloseScoop_.shutdown();
+  SensorGripperService_CloseScoop_.shutdown();
+	SensorGripperService_OpenGripper_.shutdown();
+	SensorGripperService_GrabScoop_.shutdown();
+}
+
+void Scooper::tuckArms()
+{
+  closeScooper();
+  larm_->sendArmToConfiguration(tucked_bucket_, 3.0);
+  //sleep(3.0);
+  rarm_->sendArmToConfiguration(tucked_scooper_, 3.0);
+  sleep(3.0);
+}
+
+void Scooper::poopsCallback(const geometry_msgs::PointConstPtr &poop)
+{
+/*
+  geometry_msgs::PoseStamped pose;
+  pose.header.frame_id = "/map";
+
+  pose.pose.position.x = poop->points.x;
+  pose.pose.position.y = poop->points.y;
+  pose.pose.position.z = 0.02;
+
+  geometry_msgs::Vector3 scale;
+  scale.x = 0.12;
+  scale.y = 0.12;
+  scale.z = 0.04;
+
+  num_poop_++;
+
+  MarkerInfo m;
+  m.ns = "poop";
+  m.id = num_poop_;
+  m.duration = ros::Duration(0);
+  m.color.r = 120.0/255.0;
+  m.color.g = 42.0/255.0;
+  m.color.b = 42.0/255.0;
+  m.color.a = 1.0;
+  aviz_->visualizeShape(pose, scale, m, std::string("cube"));
+*/
+}
+
+bool Scooper::parsePositionFile(std::string filename)
+{
+  FILE* file = fopen(filename.c_str(), "r");
+  char sTemp[1024];
+  std::vector<float> v(7,0);
+
+  if(file == NULL)
+  {
+    ROS_ERROR("ERROR: unable to open the file. Exiting.");
+    return false;
+  }
+
+  if(fscanf(file,"%s",sTemp) < 1)
+    ROS_WARN("Parsed string has length < 1.");
+  
+  while(!feof(file) && strlen(sTemp) != 0)
+  {
+    if(strcmp(sTemp, "tucked_scooper") == 0)
+    {
+      if(fscanf(file,"%f %f %f %f %f %f %f",&v[0],&v[1],&v[2],&v[3],&v[4],&v[5],&v[6]) < 1)
+        ROS_ERROR("Error parsing tucked_scooper pose.");
+      tucked_scooper_ = v;
+    }
+    else if(strcmp(sTemp, "tucked_bucket") == 0)
+    {
+      if(fscanf(file,"%f %f %f %f %f %f %f",&v[0],&v[1],&v[2],&v[3],&v[4],&v[5],&v[6]) < 1)
+        ROS_ERROR("Error parsing tucked_bucket pose.");
+      tucked_bucket_ = v;
+    }
+    else if(strcmp(sTemp, "start_scooper") == 0)
+    {
+      if(fscanf(file,"%f %f %f %f %f %f %f",&v[0],&v[1],&v[2],&v[3],&v[4],&v[5],&v[6]) < 1)
+        ROS_ERROR("Error parsing start_scooper pose.");
+      start_scooper_ = v;
+    }
+    else if(strcmp(sTemp, "drop_scooper") == 0)
+    {
+      if(fscanf(file,"%f %f %f %f %f %f %f",&v[0],&v[1],&v[2],&v[3],&v[4],&v[5],&v[6]) < 1)
+        ROS_ERROR("Error parsing drop_scooper pose.");
+      drop_scooper_ = v;
+    }
+    else if(strcmp(sTemp, "drop_bucket") == 0)
+    {
+      if(fscanf(file,"%f %f %f %f %f %f %f",&v[0],&v[1],&v[2],&v[3],&v[4],&v[5],&v[6]) < 1)
+        ROS_ERROR("Error parsing drop_scooper pose.");
+      drop_bucket_ = v;
+    }
+    else if(strcmp(sTemp, "floor_scooper") == 0)
+    {
+      if(fscanf(file,"%f %f %f %f %f %f %f",&v[0],&v[1],&v[2],&v[3],&v[4],&v[5],&v[6]) < 1)
+        ROS_ERROR("Error parsing start_scooper pose.");
+      floor_scooper_ = v;
+    }
+    else
+      ROS_ERROR("Can't parse: %s", sTemp);
+    if(fscanf(file,"%s",sTemp) < 1)
+      ROS_WARN("Parsed string has length < 1. (%s)", sTemp);
+  }
+  return true;
+}
+
+bool Scooper::scoopService(poop_scoop::Scooper::Request &req, poop_scoop::Scooper::Response &res)
+{
+  if(req.action.compare("scoop") == 0) {
+    ROS_INFO("Received a request to scoop a poop.");
+    scoopPoop();
+    res.result = 0;
+  }
+  else
+  {
+    res.result = 1;
+  }
+  return true;
+}
+
+void Scooper::openScooper()
+{
+	if (use_gripper_sensors_flag_)
+	{
+		std_srvs::Empty empty;
+		SensorGripperService_OpenScoop_.call(empty);
+	}
+	else
+		rgripper_->close();
+}
+
+void Scooper::closeScooper()
+{
+	if (use_gripper_sensors_flag_){
+		std_srvs::Empty empty;
+		SensorGripperService_CloseScoop_.call(empty);
+	}
+	else
+		rgripper_->open();
+}
+
+void Scooper::performInitialScooperGrab()
+{
+	// Move to prepare to lower the scooper, and open it.
+	ROS_INFO("INITAL SCOOP GRAB: Moving to the start_scooper location.");
+	rarm_->sendArmToConfiguration(start_scooper_, 2.0);
+	sleep(2.0);
+
+	if (use_gripper_sensors_flag_)
+	{
+		std_srvs::Empty empty;
+		ROS_INFO("INITIAL SCOOP GRAB WITH SENSOR: Place scoop in hand within 5 seconds.");
+		SensorGripperService_OpenGripper_.call(empty);
+		sleep(5.0);
+		ROS_INFO("INITIAL SCOOP GRAB: Grabbing scoop... I hope you put it in my hand!");
+		SensorGripperService_GrabScoop_.call(empty);
+	}
+	else
+	{
+		ROS_INFO("INITIAL SCOOP GRAB: Place scoop in hand within 5 seconds.");
+		closeScooper();
+		sleep(5.0);
+		ROS_INFO("INITIAL SCOOP GRAB: Grabbing scoop... I hope you put it in my hand!");
+		openScooper();
+	}
+
+}
+
+void Scooper::scoopPoop()
+{
+	// Move to prepare to lower the scooper, and open it.
+	ROS_INFO("Moving to the start_scooper location. Hello!");
+	rarm_->sendArmToConfiguration(start_scooper_, 2.0);
+	sleep(2);
+	openScooper();
+
+	// Move to the fllor and close the scooper
+	ROS_INFO("Moving scooper to the floor.");
+	rarm_->sendArmToConfiguration(floor_scooper_, 2.0);
+	ROS_INFO("Opening the scooper.");
+
+	// TODO: add motion to lift up gripper?
+	ROS_INFO("Opening the scooper.");
+	closeScooper();
+	//sleep(1);
+
+	// Lift the scooper up to drop the poop in the bucket.
+	ROS_INFO("Moving bucket and the scooper to drop poop in bucket.");
+	rarm_->sendArmToConfiguration(drop_scooper_, 2.0);
+	larm_->sendArmToConfiguration(drop_bucket_, 2.0);
+	sleep(2);
+
+	// Drop the poop in the bucket
+	ROS_INFO("Dropping the poop... is it in there?");
+	openScooper();
+	sleep(1);
+	// TODO: Add poop in bucket haptic detector instead of this sleeper?
+
+	// Close the scoop and tuck arms.
+	ROS_INFO("Poop is in the bucket! Tuck arms.");
+	closeScooper();
+	larm_->sendArmToConfiguration(tucked_bucket_, 2.0);
+	rarm_->sendArmToConfiguration(tucked_scooper_, 2.0);
+	sleep(2);
+}
+
+int Scooper::run()
+{
+  ros::spin();
+  return 1;
+}
+
+void Scooper::printDebugInfo()
+{
+  printf("tucked_bucket: ");
+  for(size_t i = 0; i < tucked_bucket_.size(); ++i)
+    printf("%0.3f ", tucked_bucket_[i]);
+  printf("\n");
+
+  printf("tucked_scooper: ");
+  for(size_t i = 0; i < tucked_scooper_.size(); ++i)
+    printf("%0.3f ", tucked_scooper_[i]);
+  printf("\n");
+
+  printf("start_scooper: ");
+  for(size_t i = 0; i < start_scooper_.size(); ++i)
+    printf("%0.3f ", start_scooper_[i]);
+  printf("\n");
+
+  printf("floor_scooper: ");
+  for(size_t i = 0; i < floor_scooper_.size(); ++i)
+    printf("%0.3f ", floor_scooper_[i]);
+  printf("\n");
+  printf("drop_scooper: ");
+  for(size_t i = 0; i < drop_scooper_.size(); ++i)
+    printf("%0.3f ", drop_scooper_[i]);
+  printf("\n");
+  printf("drop_bucket: ");
+  for(size_t i = 0; i < drop_bucket_.size(); ++i)
+    printf("%0.3f ", drop_bucket_[i]);
+  printf("\n");
+}
+
+int main(int argc, char **argv)
+{
+  ros::init(argc, argv, "scooper_service");
+  Scooper scooper;
+
+  //scooper.scoopPoop();
+
+  return scooper.run();
+}

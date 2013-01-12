@@ -1,0 +1,11 @@
+<launch>
+<node name="image_proc" pkg="image_proc" type="image_proc"
+ns="prosilica" />
+   <!--
+    <node name="image_view_detect" pkg="image_view" type="image_view">
+      <remap from="image" to="prosilica/text_detect"/>
+  </node>
+  -->
+
+</launch>
+
