@@ -75,7 +75,7 @@ Arm::Arm(std::string arm_name, ros::Subscriber sub):sub_(sub)
   aspinner->start();
   mux.lock();
   pos_thresh=0.05;
-  vel_thresh=0.09;
+  vel_thresh=10.09;
   
   ROS_INFO("Initialized successfully initialized.");
 }
@@ -87,6 +87,11 @@ Arm::~Arm()
   }
   else
     mux.unlock();
+  if(spin_once.try_lock()){
+    spin_once.unlock();
+  }
+  else
+    spin_once.unlock();
   delete traj_client_;
 }
 
@@ -185,6 +190,7 @@ double Arm::time(double initial[], double final[], double move_time){
   pr2_controllers_msgs::JointTrajectoryGoal initial_goal;
   pr2_controllers_msgs::JointTrajectoryGoal final_goal;
   pos_thresh=0.03;
+  vel_thresh=0.3;
   static bool firstcall=true;
   cohereAngles(initial);
   //printArray("final",final);
@@ -322,8 +328,7 @@ double Arm::timePath(vector<vector<double> > points, vector<double> times){
   }
   ROS_INFO("Path times ");
   for(int i = 0; i < times.size(); i++)
-    ROS_INFO("%f ", times[i]);
-  
+    ROS_INFO("%f ", times[i]);  
 }
 
 void Arm::printArray(char * s,const double a[7]){
@@ -388,7 +393,7 @@ void Arm::armControllerCallback(const pr2_controllers_msgs::JointTrajectoryContr
   }
   
   //S_INFO("");
-  if(sum<pos_thresh/*&&sumvel<vel_thresh*/){
+  if(sum<pos_thresh&&sumvel<vel_thresh){
     mux.unlock();
     withinError=true;
     //ROS_INFO("Within Error is true");
